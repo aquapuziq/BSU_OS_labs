@@ -12,6 +12,7 @@ struct employee
 
 int main(int argc, char* argv[])
 {
+    fstream binf(argv[1], ios::binary | ios::out);
     int numRec = atoi(argv[2]);
     employee* employees = new employee[numRec];
 
@@ -23,4 +24,11 @@ int main(int argc, char* argv[])
         cin >> employees[i].hours;
     }
 
+    for (int j = 0; j < numRec; j++) {
+        binf.write((char*)&employees[j], sizeof(employee));
+    }
+
+    binf.close();
+    
+    return 0;
 }
