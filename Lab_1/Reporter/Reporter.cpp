@@ -11,17 +11,16 @@ struct employee
     double hours;
 };
 
-int wmain(int argc, wchar_t* argv[])
+int main(int argc, char* argv[])
 {
     setlocale(LC_ALL, "ru");
 
     ifstream binf(argv[1], ios::binary);
-    ofstream rept(argv[2]);
-    float payPerHour = _wtoi(argv[3]);
+    fstream rept(argv[2]);
+    float payPerHour = atof(argv[3]);
 
     vector<employee> employees;
     employee tmpEmployee;
-
 
     while (binf.read((char*)&tmpEmployee, sizeof(employee))) {
         employees.push_back(tmpEmployee);
@@ -31,9 +30,11 @@ int wmain(int argc, wchar_t* argv[])
     rept << "Номер сотрудника, имя сотрудника, часы, зарплата." << endl;
 
     for (int i = 0; i < employees.size(); i++) {
+        float salary = float(employees[i].hours) * payPerHour;
         rept << employees[i].num << " " << employees[i].name << " " <<
-            employees[i].hours << " " << employees[i].hours * payPerHour << endl;
+            employees[i].hours << " " << salary << endl;
     }
 
+    rept.close();
     return  0;
 }

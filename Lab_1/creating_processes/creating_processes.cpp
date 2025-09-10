@@ -40,7 +40,7 @@ int main()
         return 1; 
     }
     
-    wstring exePathCr = L"Creator.exe";
+    wstring exePathCr = L"C:\\dev\\projects\\msVS\\OS_labs\\Lab_1\\Creator\\x64\\Debug\\Creator.exe";
     wstring cmdParamsCr = L"\"" + exePathCr + L"\" " + binfName + L" " + to_wstring(numRec);
 
     vector<wchar_t> cmdLineCr(cmdParamsCr.begin(), cmdParamsCr.end());
@@ -98,7 +98,7 @@ int main()
     cout << "Введите имя файла для отчёта: ";
     wcin >> repName;
 
-    wstring exePathRe = L"Reporter.exe";
+    wstring exePathRe = L"C:\\dev\\projects\\msVS\\OS_labs\\Lab_1\\Reporter\\x64\\Debug\\Reporter.exe";
     wstring cmdParamsRe = L"\"" + exePathRe + L"\" " + binfName + L" " + L" " + repName + L" " + to_wstring(payPerHour);
 
     vector<wchar_t> cmdLineRe(cmdParamsRe.begin(), cmdParamsRe.end());
@@ -124,6 +124,12 @@ int main()
     CloseHandle(startReporter.hProcess);
 
     cout << "Утилита Reporter отработала. Результаты отчета представлены в текстовом файле:" << endl;
+
+    ifstream rept(repName);
+    string line;
+    while (getline(rept, line)) {
+        cout << line << endl;
+    }
     
     return 0;
 }
