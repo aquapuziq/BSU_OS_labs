@@ -98,7 +98,7 @@ int main()
     cout << "Введите имя файла для отчёта: ";
     wcin >> repName;
 
-    wstring exePathRe = L"C:\\dev\\projects\\msVS\\OS_labs\\Lab_1\\Creator\\x64\\Debug\\Creator.exe";
+    wstring exePathRe = L"Reporter.exe";
     wstring cmdParamsRe = L"\"" + exePathRe + L"\" " + binfName + L" " + L" " + repName + L" " + to_wstring(payPerHour);
 
     vector<wchar_t> cmdLineRe(cmdParamsRe.begin(), cmdParamsRe.end());
