@@ -123,7 +123,7 @@ int main()
     CloseHandle(startReporter.hThread);
     CloseHandle(startReporter.hProcess);
 
-    cout << "Утилита Reporter отработала. Результаты отчета:" << endl;
+    cout << "Утилита Reporter отработала. Результаты отчета представлены в текстовом файле:" << endl;
     
     return 0;
 }
