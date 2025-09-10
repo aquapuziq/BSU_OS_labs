@@ -3,6 +3,7 @@
 #include <fstream>
 #include <windows.h>
 #include <stdexcept>
+#include <vector>
 
 using namespace std;
 
@@ -18,7 +19,6 @@ int main()
     setlocale(LC_ALL, "ru");
     wstring binfName, tmp;
     int numRec;
-    wchar_t callLine[50];
 
     cout << "Введите имя бинарного файла и количество записей в этом файле: ";
     wcin >> binfName;
@@ -40,34 +40,38 @@ int main()
         return 1; 
     }
     
-    tmp = L"Creator.exe " + binfName + L" " + to_wstring(numRec);
-    lstrcpyW(callLine, tmp.data());
+    wstring exePath = L"Creator.exe";
+    wstring cmdParams = L"\"" + exePath + L"\" " + binfName + L" " + to_wstring(numRec);
 
+    vector<wchar_t> cmdLine(cmdParams.begin(), cmdParams.end());
+    cmdLine.push_back(L'\0');
 
     STARTUPINFO create;
     PROCESS_INFORMATION startCreator;
 
     ZeroMemory(&create, sizeof(STARTUPINFO));
-    create.cb = sizeof(STARTUPINFO);
+    create.cb = sizeof(create);
+    ZeroMemory(&startCreator, sizeof(startCreator));
 
     cout << "Была вызвана утилита Creator" << endl;
 
-    if (!CreateProcess(NULL, callLine, NULL, NULL, FALSE,
+    if (!CreateProcessW(exePath.c_str(), cmdLine.data(), NULL, NULL, FALSE,
         CREATE_NEW_CONSOLE, NULL, NULL, &create, &startCreator)) {
-        cout << "Ошибка: процесс не был создан, пожалуйста, проверьте имя файла" << endl;
+        cout << "Ошибка: процесс не был создан, пожалуйста, проверьте имя и путь файла. Код ошибки: " << GetLastError() << endl;
         return 1;
     }
+    
 
     WaitForSingleObject(startCreator.hProcess, INFINITE);
     CloseHandle(startCreator.hThread);
     CloseHandle(startCreator.hProcess);
 
-    cout << "Утилита Creator отработала и создала файл: ";
+    cout << "Утилита Creator отработала и создала файл: " << endl;
 
     ifstream binf(binfName, ios::binary);
     employee procEmployee;
     for (int i = 0; i < numRec; i++) {
-        binf.read((char*)&procEmployee, sizeof(employee));
+        binf.read(reinterpret_cast<char*>(&procEmployee), sizeof(employee));
         cout << procEmployee.num << " " << procEmployee.name << " " << procEmployee.hours << endl;
     }
 }
