@@ -17,7 +17,7 @@ struct employee
 int main()
 {
     setlocale(LC_ALL, "ru");
-    wstring binfName, tmp;
+    wstring binfName;
     int numRec;
 
     cout << "Введите имя бинарного файла и количество записей в этом файле: ";
@@ -30,8 +30,8 @@ int main()
             throw invalid_argument("Ошибка: введено не число");
         }
 
-        if (numRec < 0) {
-            throw out_of_range("Ошибка: число не может быть отрицательным");
+        if (numRec <= 0) {
+            throw out_of_range("Ошибка: число записей не может быть меньше единицы");
         }
     }
 
@@ -40,11 +40,11 @@ int main()
         return 1; 
     }
     
-    wstring exePath = L"Creator.exe";
-    wstring cmdParams = L"\"" + exePath + L"\" " + binfName + L" " + to_wstring(numRec);
+    wstring exePathCr = L"Creator.exe";
+    wstring cmdParamsCr = L"\"" + exePathCr + L"\" " + binfName + L" " + to_wstring(numRec);
 
-    vector<wchar_t> cmdLine(cmdParams.begin(), cmdParams.end());
-    cmdLine.push_back(L'\0');
+    vector<wchar_t> cmdLineCr(cmdParamsCr.begin(), cmdParamsCr.end());
+    cmdLineCr.push_back(L'\0');
 
     STARTUPINFO create;
     PROCESS_INFORMATION startCreator;
@@ -55,18 +55,17 @@ int main()
 
     cout << "Была вызвана утилита Creator" << endl;
 
-    if (!CreateProcessW(exePath.c_str(), cmdLine.data(), NULL, NULL, FALSE,
+    if (!CreateProcessW(exePathCr.c_str(), cmdLineCr.data(), NULL, NULL, FALSE,
         CREATE_NEW_CONSOLE, NULL, NULL, &create, &startCreator)) {
         cout << "Ошибка: процесс не был создан, пожалуйста, проверьте имя и путь файла. Код ошибки: " << GetLastError() << endl;
         return 1;
     }
     
-
     WaitForSingleObject(startCreator.hProcess, INFINITE);
     CloseHandle(startCreator.hThread);
     CloseHandle(startCreator.hProcess);
 
-    cout << "Утилита Creator отработала и создала файл: " << endl;
+    cout << "Утилита Creator отработала и создала файл, содержащий:" << endl;
 
     ifstream binf(binfName, ios::binary);
     employee procEmployee;
@@ -74,5 +73,58 @@ int main()
         binf.read(reinterpret_cast<char*>(&procEmployee), sizeof(employee));
         cout << procEmployee.num << " " << procEmployee.name << " " << procEmployee.hours << endl;
     }
+
+    wstring repName;
+    float payPerHour;
+
+    cout << "Введите величину оплаты за час работы: ";
+    try {
+        cin >> payPerHour;
+
+        if (cin.fail()) {
+            throw invalid_argument("Ошибка: введено не число");
+        }
+
+        if (payPerHour < 0) {
+            throw out_of_range("Ошибка: ставка не может быть отрицательной");
+        }
+    }
+
+    catch (const exception& e) {
+        cerr << e.what() << endl;
+        return 1;
+    }
+
+    cout << "Введите имя файла для отчёта: ";
+    wcin >> repName;
+
+    wstring exePathRe = L"C:\\dev\\projects\\msVS\\OS_labs\\Lab_1\\Creator\\x64\\Debug\\Creator.exe";
+    wstring cmdParamsRe = L"\"" + exePathRe + L"\" " + binfName + L" " + L" " + repName + L" " + to_wstring(payPerHour);
+
+    vector<wchar_t> cmdLineRe(cmdParamsRe.begin(), cmdParamsRe.end());
+    cmdLineRe.push_back(L'\0');
+
+    STARTUPINFO report;
+    PROCESS_INFORMATION startReporter;
+
+    ZeroMemory(&report, sizeof(STARTUPINFO));
+    report.cb = sizeof(report);
+    ZeroMemory(&startReporter, sizeof(startReporter));
+
+    cout << "Была вызвана утилита Reporter" << endl;
+
+    if (!CreateProcessW(exePathRe.c_str(), cmdLineRe.data(), NULL, NULL, FALSE,
+        CREATE_NEW_CONSOLE, NULL, NULL, &report, &startReporter)) {
+        cout << "Ошибка: процесс не был создан, пожалуйста, проверьте имя и путь файла. Код ошибки: " << GetLastError() << endl;
+        return 1;
+    }
+
+    WaitForSingleObject(startReporter.hProcess, INFINITE);
+    CloseHandle(startReporter.hThread);
+    CloseHandle(startReporter.hProcess);
+
+    cout << "Утилита Reporter отработала. Результаты отчета:" << endl;
+    
+    return 0;
 }
 
