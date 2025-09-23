@@ -3,3 +3,4 @@
 *.users
 .x64/
 *.vcxproj
+*.vcxproj.user
