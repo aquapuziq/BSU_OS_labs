@@ -2,3 +2,4 @@
 *.filters
 *.users
 .x64/
+*.vcxproj
