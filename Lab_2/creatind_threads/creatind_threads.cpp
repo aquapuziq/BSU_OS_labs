@@ -1,88 +1,64 @@
 ﻿#include <iostream>
 #include <windows.h>
+#include "creating_threads.h"
 
 using namespace std;
 
-volatile int* arr;
-volatile int minElement, maxElement, averageElement;
-
-DWORD WINAPI min_max(LPVOID dim) {
-    int n = (int)dim;
-    minElement = arr[0];
-    maxElement = arr[0];
-    for (int i = 1; i < n; i++) {
-        if (arr[i] > maxElement) {
-            maxElement = arr[i];
-            Sleep(7);
-        }
-
-        if (arr[i] < minElement) {
-            minElement = arr[i];
-            Sleep(7);
-        }
-    }
-
-    cout << "Минимальный элемент массива: " << minElement << endl;
-    cout << "Максимальный элемент массива: " << maxElement << endl;
-    
-    return 1;
-}
-
-DWORD WINAPI average(LPVOID dim) {
-    int n = (int)dim;
-    int sum = 0;
-    for (int i = 0; i < n; i++) {
-        sum += arr[i];
-        Sleep(12);
-    }
-
-    averageElement = sum / n;
-    cout << "Среднее арифметическое элементов массива: " << averageElement;
-
-    return 1;
-}
-
-int main()
-{
-    setlocale(LC_ALL, "ru");
-    int n; int element;
-    cout << "Введите размерность массива: ";
-    cin >> n;
-    arr = new int[n];
-
-    cout << "Введите элементы массива: ";
-    for (int i = 0; i < n; i++) {
-        cin >> element;
-        arr[i] = element;
-    }
-
-    cout << endl;
-    
-    HANDLE hMinMax, hAverage;
-    DWORD IDMinMax, IDAverage;
+int main() {
+	setlocale(LC_ALL, "ru");
 
 
-    hMinMax = CreateThread(NULL, 0, min_max, (void*)n, 0, &IDMinMax);
-    if (hMinMax == NULL)
-        return GetLastError();
+	int n; int tmp;
+	cout << "Введите размерность массива: ";
+	if (!(cin >> n) || n <= 0) {
+		cerr << "Неверный размер массива\n";
+		return 1;
+	}
 
-    hAverage = CreateThread(NULL, 0, average, (void*)n, 0, &IDAverage);
-    if (hAverage == NULL)
-        return GetLastError();
 
-    WaitForSingleObject(hAverage, INFINITE);
-    CloseHandle(hAverage);
+	arr = new int[n];
+	cout << "Введите элементы массива: ";
+	for (int i = 0; i < n; ++i) {
+		cin >> tmp;
+		arr[i] = tmp;
+	}
+	cout << endl;
 
-    WaitForSingleObject(hMinMax, INFINITE);
-    CloseHandle(hMinMax);
 
-    cout << "\n\nМассив после форматирования: ";
-    for (int i = 0; i < n; i++) {
-        if (arr[i] == maxElement || arr[i] == minElement) {
-            arr[i] = averageElement;
-        }
-        cout << arr[i] << " ";
-    }
+	HANDLE hMinMax = CreateThread(nullptr, 0, min_max, (void*)n, 0, nullptr);
+	if (hMinMax == NULL) {
+		cerr << "Не удалось создать поток min_max\n";
+		delete[] arr;
+		return 1;
+	}
 
-    return 0;
+
+	HANDLE hAverage = CreateThread(nullptr, 0, average, (void*)n, 0, nullptr);
+	if (hAverage == NULL) {
+		cerr << "Не удалось создать поток average\n";
+		CloseHandle(hMinMax);
+		delete[] arr;
+		return 1;
+	}
+
+	WaitForSingleObject(hAverage, INFINITE);
+	CloseHandle(hAverage);
+
+	WaitForSingleObject(hMinMax, INFINITE);
+	CloseHandle(hMinMax);
+
+
+	cout << "\n\nМассив после форматирования: ";
+	for (int i = 0; i < n; ++i) {
+		if (arr[i] == maxElement || arr[i] == minElement) {
+			arr[i] = averageElement;
+		}
+		cout << arr[i] << " ";
+	}
+	cout << '\n';
+
+
+	delete[] arr;
+	arr = nullptr;
+	return 0;
 }
