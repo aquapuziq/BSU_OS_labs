@@ -5,6 +5,8 @@ VisualStudioVersion = 17.11.35222.181
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "creating_std_thread", "creating_std_thread.vcxproj", "{A850578A-D311-402F-8BE5-30EF521C0645}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTestThread", "..\UnitTestThread\UnitTestThread.vcxproj", "{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{A850578A-D311-402F-8BE5-30EF521C0645}.Release|x64.Build.0 = Release|x64
 		{A850578A-D311-402F-8BE5-30EF521C0645}.Release|x86.ActiveCfg = Release|Win32
 		{A850578A-D311-402F-8BE5-30EF521C0645}.Release|x86.Build.0 = Release|Win32
+		{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}.Debug|x64.ActiveCfg = Debug|x64
+		{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}.Debug|x64.Build.0 = Debug|x64
+		{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}.Debug|x86.ActiveCfg = Debug|Win32
+		{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}.Debug|x86.Build.0 = Debug|Win32
+		{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}.Release|x64.ActiveCfg = Release|x64
+		{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}.Release|x64.Build.0 = Release|x64
+		{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}.Release|x86.ActiveCfg = Release|Win32
+		{C22760D6-7F0F-4483-B5F0-92DB0BC184ED}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
