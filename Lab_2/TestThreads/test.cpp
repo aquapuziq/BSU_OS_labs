@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <vector>
 #include <iostream>
-#include "C:\dev\projects\msVS\OS_labs\Lab_2\creatind_threads\creating_threads.h"
+#include "creating_threads.h"
 
 using namespace std;
 
@@ -58,5 +58,31 @@ TEST(IntegrationThreads, CorrectMinMaxAverage) {
 	EXPECT_EQ(averageElement, (1 + 2 + 3 + 4 + 5) / 5);
 
 	vector<int> expected = { 3,2,3,4,3 };
+	EXPECT_EQ(mas, expected);
+}
+
+TEST(IntegrationThreads, equalMinMaxAverage) {
+	vector<int> mas = { 3,3,3,3,3 };
+	ASSERT_NO_THROW(runThreadsInitArray(mas));
+
+
+	EXPECT_EQ(minElement, 3);
+	EXPECT_EQ(maxElement, 3);
+	EXPECT_EQ(averageElement, 3);
+
+	vector<int> expected = { 3,3,3,3,3 };
+	EXPECT_EQ(mas, expected);
+}
+
+TEST(IntegrationThreads, oneElem) {
+	vector<int> mas = {5};
+	ASSERT_NO_THROW(runThreadsInitArray(mas));
+
+
+	EXPECT_EQ(minElement, 5);
+	EXPECT_EQ(maxElement, 5);
+	EXPECT_EQ(averageElement, 5);
+
+	vector<int> expected = { 5 };
 	EXPECT_EQ(mas, expected);
 }
