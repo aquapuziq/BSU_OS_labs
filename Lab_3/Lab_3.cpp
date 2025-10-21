@@ -4,11 +4,13 @@
 using namespace std;
 
 volatile int dim;
+volatile int rem = 0; 
 int* arr;
 
 CRITICAL_SECTION cs;
-HANDLE hStartSignal, hBreakSignal, hContinueSignal;
+HANDLE hStartSignal, hContinueSignal, hRemoveEvent;
 HANDLE* hTerminateSignals;
+HANDLE* hFinishEvents;
 
 DWORD WINAPI marker(LPVOID number) {
     WaitForSingleObject(hStartSignal, INFINITE);
@@ -22,6 +24,7 @@ DWORD WINAPI marker(LPVOID number) {
     while (true) {
         int tmp = rand();
         int index = tmp % dim;
+
         EnterCriticalSection(&cs);
         if (arr[index] == 0) {
             Sleep(5);
@@ -29,20 +32,20 @@ DWORD WINAPI marker(LPVOID number) {
             marks[index] = 1;
             mark++;
             Sleep(5);
-            continue;
+            LeaveCriticalSection(&cs);
         }
         else {
             cout << "Порядковый номер потока: " << n << endl;
             cout << "Количество помеченных элементов: " << mark << endl;
-            cout << "Индекс элемента массива, который невозможно пометить: " << index;
-
+            cout << "Индекс элемента массива, который невозможно пометить: " << index << endl;
+            cout << endl;
             LeaveCriticalSection(&cs);
-            SetEvent(hBreakSignal);
 
-            HANDLE hWait[2] = { hContinueSignal, hTerminateSignals[n - 1] };
-            DWORD res = WaitForMultipleObjects(2, hWait, FALSE, INFINITE);
+            SetEvent(hFinishEvents[n - 1]);
 
-            if (res == WAIT_OBJECT_0 + 1) {
+            WaitForSingleObject(hRemoveEvent, INFINITE);
+
+            if (rem == n) {
                 EnterCriticalSection(&cs);
                 for (int i = 0; i < dim; i++) {
                     if (marks[i] == 1) {
@@ -51,11 +54,15 @@ DWORD WINAPI marker(LPVOID number) {
                 }
                 LeaveCriticalSection(&cs);
                 delete[] marks;
+                SetEvent(hFinishEvents[n - 1]); 
                 return 0;
+            }
+            else {
+                ResetEvent(hFinishEvents[n - 1]);
+                WaitForSingleObject(hContinueSignal, INFINITE);
             }
         }
     }
-
 }
 
 int main()
@@ -77,21 +84,11 @@ int main()
     DWORD* IDMarkers = new DWORD[num];
     HANDLE* hMarkers = new HANDLE[num];
     hTerminateSignals = new HANDLE[num];
+    hFinishEvents = new HANDLE[num];
 
-    hStartSignal = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (hStartSignal == NULL) {
-        return GetLastError();
-    }
-
-    hBreakSignal = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (hBreakSignal == NULL) {
-        return GetLastError();
-    }
-
-    hContinueSignal = CreateEvent(NULL, FALSE, FALSE, NULL);
-    if (hContinueSignal == NULL) {
-        return GetLastError();
-    }
+    hStartSignal = CreateEvent(NULL, TRUE, FALSE, NULL);
+    hContinueSignal = CreateEvent(NULL, TRUE, FALSE, NULL); 
+    hRemoveEvent = CreateEvent(NULL, TRUE, FALSE, NULL); 
 
     for (int i = 0; i < num; i++) {
         hMarkers[i] = CreateThread(NULL, 0, marker, (LPVOID)(i + 1), 0, &IDMarkers[i]);
@@ -100,26 +97,22 @@ int main()
             return 1;
         }
 
-        hTerminateSignals[i] = CreateEvent(NULL, FALSE, FALSE, NULL);
-        if (hTerminateSignals[i] == NULL) {
-            cerr << "Не удалось создать событие завершения для маркера " << (i + 1) << endl;
-            return 1;
-        }
+        hTerminateSignals[i] = CreateEvent(NULL, TRUE, FALSE, NULL);
+        hFinishEvents[i] = CreateEvent(NULL, TRUE, FALSE, NULL);
     }
 
     SetEvent(hStartSignal);
 
     int iteration = num;
     while (iteration > 0) {
-        WaitForSingleObject(hBreakSignal, INFINITE);
-        EnterCriticalSection(&cs);
+        WaitForMultipleObjects(num, hFinishEvents, TRUE, INFINITE);
 
-        cout << "На данный момент массив имеет вид: " << endl;
+        EnterCriticalSection(&cs);
+        cout << "\nНа данный момент массив имеет вид:\n";
         for (int i = 0; i < dim; i++) {
             cout << arr[i] << " ";
         }
         cout << endl;
-
         LeaveCriticalSection(&cs);
 
         cout << "Введите порядковый номер потока marker, который необходимо завершить: ";
@@ -127,13 +120,13 @@ int main()
         cin >> delThread;
 
         if (delThread < 1 || delThread > num || hMarkers[delThread - 1] == NULL) {
-            cout << "Некорректный номер потока, пожалуйста, попробуй ёщё раз" << endl;
+            cout << "Некорректный номер потока. Повторите попытку.\n";
             SetEvent(hContinueSignal);
             continue;
         }
-            
-        SetEvent(hTerminateSignals[delThread - 1]);
 
+        rem = delThread;
+        PulseEvent(hRemoveEvent);
         WaitForSingleObject(hMarkers[delThread - 1], INFINITE);
         CloseHandle(hMarkers[delThread - 1]);
         hMarkers[delThread - 1] = NULL;
@@ -141,34 +134,33 @@ int main()
         iteration--;
 
         EnterCriticalSection(&cs);
-
-        cout << "Поток " << delThread << " завершён, текущее состояние массива:" << endl;
+        cout << "Поток " << delThread << " завершён. Текущее состояние массива:\n";
         for (int i = 0; i < dim; i++) {
             cout << arr[i] << " ";
         }
         cout << endl;
-
         LeaveCriticalSection(&cs);
 
-        SetEvent(hContinueSignal);
+        ResetEvent(hRemoveEvent);
+        PulseEvent(hContinueSignal); 
     }
 
-    cout << "Все потоки завершены";
-    cout << "Заключительное состояние массива:" << endl;
-
+    cout << "\nВсе потоки завершены.\nЗаключительное состояние массива:\n";
     for (int i = 0; i < dim; i++) {
         cout << arr[i] << " ";
     }
+    cout << endl;
 
     for (int i = 0; i < num; i++) {
-        CloseHandle(hMarkers[i]);
+        if (hMarkers[i]) CloseHandle(hMarkers[i]);
+        CloseHandle(hTerminateSignals[i]);
+        CloseHandle(hFinishEvents[i]);
     }
 
     CloseHandle(hStartSignal);
-    CloseHandle(hBreakSignal);
     CloseHandle(hContinueSignal);
+    CloseHandle(hRemoveEvent);
     DeleteCriticalSection(&cs);
 
     return 0;
 }
-
