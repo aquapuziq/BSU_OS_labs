@@ -1,4 +1,5 @@
-﻿#include "head.h"
+﻿#include "Lab_31.h"
+#include "head.h"
 #include "marker.h"
 
 CRITICAL_SECTION cs;
@@ -84,4 +85,20 @@ int main() {
         PulseEvent(hContinueSignal);
     }
 
-    std::cout << "\nВсе потоки завершены.\nЗаключительное состояние ма
+    std::cout << "\nВсе потоки завершены.\nЗаключительное состояние массива:\n";
+    for (int i = 0; i < dim; i++) std::cout << arr[i] << " ";
+    std::cout << std::endl;
+
+    for (int i = 0; i < num; i++) {
+        if (hMarkers[i]) CloseHandle(hMarkers[i]);
+        CloseHandle(hTerminateSignals[i]);
+        CloseHandle(hFinishEvents[i]);
+    }
+
+    CloseHandle(hStartSignal);
+    CloseHandle(hContinueSignal);
+    CloseHandle(hRemoveEvent);
+    DeleteCriticalSection(&cs);
+
+    return 0;
+}
