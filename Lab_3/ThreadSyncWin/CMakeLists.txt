@@ -25,7 +25,7 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ThreadSyncWin PROPERTY CXX_STANDARD 20)
 endif()
 
-add_executable(markerTests "testMarker.cpp" "marker.h" "head.h")
+add_executable(markerTests "testMarker.cpp" "marker.h" "head.h" "marker.cpp")
 target_include_directories(markerTests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(markerTests PRIVATE gtest gtest_main Threads::Threads)
 
