@@ -1,4 +1,4 @@
-﻿#include "Lab_31.h"
+﻿#include "ThreadSyncWin.h"
 #include "head.h"
 #include "marker.h"
 
@@ -102,3 +102,4 @@ int main() {
 
     return 0;
 }
+
