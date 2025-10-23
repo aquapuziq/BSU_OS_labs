@@ -10,6 +10,8 @@ project ("ThreadSyncStdThread")
 
 set(CMAKE_CXX_STANDARD 17)
 
+add_library(markerLib "marker.cpp""marker.h")
+
 # Добавьте источник в исполняемый файл этого проекта.
 add_executable (ThreadSyncStdThread "ThreadSyncStdThread.cpp" "ThreadSyncStdThread.h" "marker.cpp" "marker.h")
 
@@ -18,4 +20,6 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
 endif()
 
 # TODO: Добавьте тесты и целевые объекты, если это необходимо.
-add_executable (testMarker "ThreadSyncStdThread.cpp" "testStdThread.cpp")
+add_executable (testMarker "testStdThread.cpp" "marker.h")
+target_link_libraries(ThreadSyncStdThread PRIVATE markerLib)
+target_link_libraries(testMarker PRIVATE markerLib)
