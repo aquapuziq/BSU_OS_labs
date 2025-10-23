@@ -8,8 +8,10 @@ endif()
 
 project ("ThreadSyncStdThread")
 
+set(CMAKE_CXX_STANDARD 17)
+
 # Добавьте источник в исполняемый файл этого проекта.
-add_executable (ThreadSyncStdThread "ThreadSyncStdThread.cpp" "ThreadSyncStdThread.h" "marker.cpp")
+add_executable (ThreadSyncStdThread "ThreadSyncStdThread.cpp" "ThreadSyncStdThread.h" "marker.cpp" "marker.h")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET ThreadSyncStdThread PROPERTY CXX_STANDARD 20)

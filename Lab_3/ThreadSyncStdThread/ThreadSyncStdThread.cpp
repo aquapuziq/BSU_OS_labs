@@ -3,6 +3,7 @@
 
 
 int main() {
+    std::ios::sync_with_stdio(false);
     setlocale(LC_ALL, "ru");
 
     int tmpDim;
@@ -16,12 +17,18 @@ int main() {
     std::cout << "Введите количество потоков marker: ";
     std::cin >> numThreads;
 
+    isBlocked.assign(numThreads, false);
+    isAlive.assign(numThreads, true);
+
+    remainingThreads = numThreads;
+    blockedCount = 0;
+
     vector<thread> threads;
     vector<MarkerInfo> infos(numThreads);
-    remainingThreads = numThreads;
 
     for (int i = 0; i < numThreads; ++i) {
         infos[i].id = i + 1;
+        infos[i].marks.assign(dim, 0);
         threads.emplace_back(markerThread, &infos[i]);
     }
 
@@ -31,18 +38,19 @@ int main() {
     }
     cvStart.notify_all();
 
-    while (remainingThreads > 0) {
+    while (remainingThreads.load() > 0) {
         unique_lock<mutex> lock(cs);
-        cvFinish.wait(lock, [] { return remainingThreads == 0; });
-        
-        {
-            lock_guard<mutex> lock(cs);
-            cout << "\nНа данный момент массив имеет вид:\n";
-            for (int i = 0; i < dim; ++i) cout << arr[i] << " ";
-            cout << endl;
-        }
+        cvBlocked.wait(lock, [] {
+            return (remainingThreads.load() > 0) && (blockedCount.load() == remainingThreads.load());
+            });
 
-       /* int delId = -1;
+        cout << "\nНа данный момент массив имеет вид:\n";
+        for (int i = 0; i < dim; ++i) cout << arr[i] << " ";
+        cout << endl;
+        
+        lock.unlock();
+
+        int delId = -1;
         while (true) {
             cout << "Введите порядковый номер потока marker, который необходимо завершить: ";
             cin >> delId;
@@ -54,23 +62,22 @@ int main() {
                 cout << "Этот поток уже завершён. Выберите другой.\n";
                 continue;
             }
-            break;*/
+            break;
         }
 
- /*       {
-            lock_guard<mutex> lock(cs);
+        {
+            lock_guard<mutex> guard(cs);
             removeSignal = true;
             removeId = delId;
-            continueSignal = false; 
+            continueSignal = false;
         }
         cvRemove.notify_all();
 
         if (threads[delId - 1].joinable()) {
             threads[delId - 1].join();
         }
-
         {
-            lock_guard<mutex> lock(cs);
+            lock_guard<mutex> guard(cs);
             cout << "Поток " << delId << " завершён. Текущее состояние массива:\n";
             for (int i = 0; i < dim; ++i) cout << arr[i] << " ";
             cout << endl;
@@ -83,18 +90,15 @@ int main() {
         cvRemove.notify_all();
 
         {
-            unique_lock<mutex> lock(cs);
-            cvBlocked.wait(lock, [] {
+            unique_lock<mutex> lock2(cs);
+            cvBlocked.wait(lock2, [] {
                 return (blockedCount.load() == 0) || (blockedCount.load() == remainingThreads.load());
-                });
-            continueSignal = false;
+                });continueSignal = false;
         }
-
     }
-
     cout << "\nВсе потоки завершены.\nЗаключительное состояние массива:\n";
     for (int i = 0; i < dim; ++i) cout << arr[i] << " ";
     cout << endl;
 
     return 0;
-}*/
+}
