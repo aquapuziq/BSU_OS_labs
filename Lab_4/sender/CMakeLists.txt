@@ -7,7 +7,12 @@ endif()
 
 project ("sender")
 
-add_executable (sender "sender.cpp" "sender.h")
+add_executable (sender "sender.cpp" "sender.h" "../messageManager/messageManager.cpp" "../messageManager/messageManager.h")
+
+target_include_directories(sender PRIVATE
+    ${CMAKE_SOURCE_DIR}/messageManager
+)
+
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET sender PROPERTY CXX_STANDARD 20)

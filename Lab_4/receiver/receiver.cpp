@@ -3,21 +3,22 @@
 #include <string>
 #include <vector>
 #include <Windows.h>
+#include "messageManager.h"
 
 int main() {
     setlocale(LC_ALL, "ru");
     std::string fileName;
-    int numS;
+    int numSenders;
 
     std::cout << "Введите имя бинарного файла: ";
     std::cin >> fileName;
 
-    std::ofstream(fileName, std::ios::binary | std::ios::trunc).close();
+    clearFile(fileName);
 
-    std::cout << "Введите количество Sender процессов: ";
-    std::cin >> numS;
+    std::cout << "Введите количество процессов Sender: ";
+    std::cin >> numSenders;
 
-    for (int i = 0; i < numS; i++) {
+    for (int i = 0; i < numSenders; i++) {
         STARTUPINFOA si{};
         PROCESS_INFORMATION pi{};
         ZeroMemory(&si, sizeof(STARTUPINFO));
@@ -46,29 +47,19 @@ int main() {
             break;
 
         if (command == "read") {
-            std::ifstream file(fileName, std::ios::binary);
-            if (!file) {
-                std::cerr << "Ошибка открытия файла" << std::endl;
-                continue;
+            auto messages = readMessages(fileName);
+            if (messages.empty()) {
+                std::cout << "Файл пуст, сообщений нет" << std::endl;
             }
-
-            while (true) {
-                uint8_t len;
-                if (!file.read(reinterpret_cast<char*>(&len), sizeof(len)))
-                    break; 
-
-                std::vector<char> buf(len + 1);
-                file.read(buf.data(), len);
-                buf[len] = '\0';
-
-                std::cout << "Сообщения в файле: " << buf.data() << std::endl;
+            else {
+                for (auto& m : messages) {
+                    std::cout << "Сообщение: " << m.text << std::endl;
+                }
+                clearFile(fileName);
             }
-
-            std::ofstream(fileName, std::ios::binary | std::ios::trunc).close();
         }
     }
 
     std::cout << "Процесс Receiver завершил работу" << std::endl;
     return 0;
 }
-

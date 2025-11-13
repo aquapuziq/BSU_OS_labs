@@ -7,9 +7,12 @@ endif()
 
 project ("receiver")
 
-add_executable (receiver "receiver.cpp" "receiver.h")
+add_executable (receiver "receiver.cpp" "receiver.h" "../messageManager/messageManager.cpp" "../messageManager/messageManager.h")
 
 add_dependencies(receiver sender)
+target_include_directories(receiver PRIVATE
+    ${CMAKE_SOURCE_DIR}/messageManager
+)
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET receiver PROPERTY CXX_STANDARD 20)

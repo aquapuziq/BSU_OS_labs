@@ -3,11 +3,15 @@
 #include <string>
 #include <thread>
 #include <chrono>
-
-const int MAXLEN = 20;
+#include "messageManager.h"
 
 int main(int argc, char* argv[]) {
     setlocale(LC_ALL, "ru");
+
+    if (argc < 2) {
+        std::cerr << "Ошибка: не указано имя файла." << std::endl;
+        return 1;
+    }
 
     std::string fileName = argv[1];
     std::cout << "Процесс Sender запущен, команды: send / finish" << std::endl;
@@ -25,23 +29,21 @@ int main(int argc, char* argv[]) {
             std::string message;
             std::cout << "Введите сообщение (до 20 символов): ";
             std::getline(std::cin, message);
-            if (message.size() > MAXLEN) message.resize(MAXLEN);
 
-            std::ofstream file(fileName, std::ios::binary | std::ios::app);
-            if (!file) {
-                std::cerr << "Ошибка открытия файла" << std::endl;
+            if (message.empty()) {
+                std::cout << "Пустое сообщение не будет записано." << std::endl;
                 continue;
             }
 
-            uint8_t len = static_cast<uint8_t>(message.size());
-            file.write(reinterpret_cast<char*>(&len), sizeof(len));
-            file.write(message.c_str(), len);
-            file.flush();
+            if (!writeMessage(fileName, message)) {
+                std::cerr << "Ошибка записи" << std::endl;
+                continue;
+            }
 
             std::cout << "Сообщение записано" << std::endl;
         }
     }
 
-    std::cout << "Sender завершил работу.\n";
+    std::cout << "Sender завершил работу" << std::endl;
     return 0;
 }
