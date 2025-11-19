@@ -1,22 +1,38 @@
 ﻿#include <iostream>
 #include <fstream>
 #include <string>
-#include <vector>
-#include <Windows.h>
+#include <windows.h>
 #include "messageManager.h"
 
 int main() {
     setlocale(LC_ALL, "ru");
+
     std::string fileName;
-    int numSenders;
+    int numSenders, numMessages;
 
     std::cout << "Введите имя бинарного файла: ";
     std::cin >> fileName;
 
-    clearFile(fileName);
-
     std::cout << "Введите количество процессов Sender: ";
     std::cin >> numSenders;
+
+    std::cout << "Введите размер кольцевой очереди (количество сообщений): ";
+    std::cin >> numMessages;
+
+    std::fstream file(fileName, std::ios::binary | std::ios::trunc | std::ios::out);
+    
+    struct RingQueue {
+        int head = 0;
+        int tail = 0;
+        int capacity = 0;
+    }
+
+    header;
+    header.capacity = numMessages;
+    file.write(reinterpret_cast<char*>(&header), sizeof(header));
+    file.close();
+
+    initSyncObjects(numMessages - 1);
 
     for (int i = 0; i < numSenders; i++) {
         STARTUPINFOA si{};
@@ -36,30 +52,27 @@ int main() {
         }
     }
 
-    std::cout << "\nФайл " << fileName << " готов, команды: read / finish" << std::endl;
+    std::cout << "\nКоманды: read / finish" << std::endl;
 
     while (true) {
-        std::string command;
+        std::string cmd;
         std::cout << "> ";
-        std::cin >> command;
+        std::cin >> cmd;
 
-        if (command == "finish")
+        if (cmd == "finish") 
             break;
 
-        if (command == "read") {
-            auto messages = readMessages(fileName);
-            if (messages.empty()) {
-                std::cout << "Файл пуст, сообщений нет" << std::endl;
+        if (cmd == "read") {
+            std::string msg;
+            if (readMessage(fileName, msg)) {
+                std::cout << "Сообщение: " << msg << std::endl;
             }
             else {
-                for (auto& m : messages) {
-                    std::cout << "Сообщение: " << m.text << std::endl;
-                }
-                clearFile(fileName);
+                std::cout << "Новых сообщений нет" << std::endl;
             }
         }
     }
 
-    std::cout << "Процесс Receiver завершил работу" << std::endl;
+    std::cout << "Receiver завершил работу" << std::endl;
     return 0;
 }

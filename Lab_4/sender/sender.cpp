@@ -1,41 +1,39 @@
 ﻿#include <iostream>
-#include <fstream>
 #include <string>
-#include <thread>
-#include <chrono>
-#include "messageManager.h"
+#include "C:\dev\projects\msVS\OS_labs\Lab_4\messageManager\messageManager.h"
 
 int main(int argc, char* argv[]) {
     setlocale(LC_ALL, "ru");
 
     if (argc < 2) {
-        std::cerr << "Ошибка: не указано имя файла." << std::endl;
+        std::cerr << "Ошибка: не указан файл" << std::endl;
         return 1;
     }
 
     std::string fileName = argv[1];
+
+    openSyncObjects();
+
     std::cout << "Процесс Sender запущен, команды: send / finish" << std::endl;
 
     while (true) {
-        std::string command;
+        std::string cmd;
         std::cout << "> ";
-        std::cin >> command;
+        std::cin >> cmd;
 
-        if (command == "finish")
-            break;
-
-        if (command == "send") {
+        if (cmd == "finish") break;
+        if (cmd == "send") {
             std::cin.ignore();
-            std::string message;
+            std::string msg;
             std::cout << "Введите сообщение (до 20 символов): ";
-            std::getline(std::cin, message);
+            std::getline(std::cin, msg);
 
-            if (message.empty()) {
-                std::cout << "Пустое сообщение не будет записано." << std::endl;
+            if (msg.empty()) {
+                std::cout << "Пустое сообщение" << std::endl;
                 continue;
             }
 
-            if (!writeMessage(fileName, message)) {
+            if (!writeMessage(fileName, msg)) {
                 std::cerr << "Ошибка записи" << std::endl;
                 continue;
             }
