@@ -1,57 +1,128 @@
 ﻿#include <gtest/gtest.h>
-#include <filesystem>
-#include <iostream>
+#include <fstream>
+#include <cstdio>
 #include "messageManager.h"
 
-namespace fs = std::filesystem;
+static const std::string TESTFILE = "test.bin";
 
-class MessageFileTest : public ::testing::Test {
+void createQueueFile(int capacity)
+{
+    std::fstream file(TESTFILE, std::ios::binary | std::ios::trunc | std::ios::out);
+
+    struct Header {
+        int head = 0;
+        int tail = 0;
+        int capacity = 0;
+    } header;
+
+    header.capacity = capacity;
+    file.write(reinterpret_cast<char*>(&header), sizeof(header));
+    file.close();
+}
+
+void deleteQueueFile()
+{
+    std::remove(TESTFILE.c_str());
+}
+
+class MessageManagerTest : public ::testing::Test {
 protected:
-    std::string file = "test.bin";
-
     void SetUp() override {
-        if (fs::exists(file)) fs::remove(file);
+        createQueueFile(5);
+        initSyncObjects(5);  
     }
 
     void TearDown() override {
-        if (fs::exists(file)) fs::remove(file);
+        deleteQueueFile();
     }
 };
 
-TEST_F(MessageFileTest, WriteAndReadSingleMessage) {
-    bool ok = writeMessage(file, "PrivetTest");
-    EXPECT_TRUE(ok);
+TEST_F(MessageManagerTest, WriteSingleMessage)
+{
+    std::string msg = "test1";
 
-    auto messages = readMessages(file);
-    ASSERT_EQ(messages.size(), 1);
-    EXPECT_EQ(messages[0].text, "PrivetTest");
+    bool ok = writeMessage(TESTFILE, msg);
+    ASSERT_TRUE(ok);
+
+    std::string read;
+    ASSERT_TRUE(readMessage(TESTFILE, read));
+    ASSERT_EQ(read, msg);
 }
 
-TEST_F(MessageFileTest, WriteMultipleMessages) {
-    writeMessage(file, "test1");
-    writeMessage(file, "TEST2");
-    writeMessage(file, "testtest");
 
-    auto messages = readMessages(file);
-    ASSERT_EQ(messages.size(), 3);
-    EXPECT_EQ(messages[0].text, "test1");
-    EXPECT_EQ(messages[1].text, "TEST2");
-    EXPECT_EQ(messages[2].text, "testtest");
+TEST_F(MessageManagerTest, WriteReadFIFO)
+{
+    writeMessage(TESTFILE, "test");
+    writeMessage(TESTFILE, "testtest");
+    writeMessage(TESTFILE, "tester");
+
+    std::string msg;
+
+    ASSERT_TRUE(readMessage(TESTFILE, msg));
+    EXPECT_EQ(msg, "test");
+
+    ASSERT_TRUE(readMessage(TESTFILE, msg));
+    EXPECT_EQ(msg, "testtest");
+
+    ASSERT_TRUE(readMessage(TESTFILE, msg));
+    EXPECT_EQ(msg, "tester");
 }
 
-TEST_F(MessageFileTest, ClearFileRemovesMessages) {
-    writeMessage(file, "Test");
-    clearFile(file);
 
-    auto messages = readMessages(file);
-    EXPECT_TRUE(messages.empty());
+TEST_F(MessageManagerTest, ReadEmptyQueue)
+{
+    std::string msg;
+    ASSERT_FALSE(readMessage(TESTFILE, msg)); 
 }
 
-TEST_F(MessageFileTest, MessageIsTrimmedTo20Chars) {
-    std::string longMsg(50, 'X');
-    writeMessage(file, longMsg);
 
-    auto messages = readMessages(file);
-    ASSERT_EQ(messages.size(), 1);
-    EXPECT_EQ(messages[0].text.size(), 20);
+TEST_F(MessageManagerTest, QueueOverflow)
+{
+    for (int i = 0; i < 5; i++)
+        ASSERT_TRUE(writeMessage(TESTFILE, "text"));
+
+    ASSERT_FALSE(writeMessage(TESTFILE, "textErr"));
 }
+
+
+TEST_F(MessageManagerTest, RingBuffer)
+{
+    writeMessage(TESTFILE, "1");
+    writeMessage(TESTFILE, "2");
+    writeMessage(TESTFILE, "3");
+    writeMessage(TESTFILE, "4");
+    writeMessage(TESTFILE, "5");
+
+    std::string message;
+    readMessage(TESTFILE, message);
+    readMessage(TESTFILE, message);
+
+    ASSERT_TRUE(writeMessage(TESTFILE, "6"));
+    ASSERT_TRUE(writeMessage(TESTFILE, "7"));
+
+    readMessage(TESTFILE, message);
+    EXPECT_EQ(message, "3");
+    readMessage(TESTFILE, message);
+    EXPECT_EQ(message, "4");
+    readMessage(TESTFILE, message);
+    EXPECT_EQ(message, "5");
+    readMessage(TESTFILE, message);
+    EXPECT_EQ(message, "6");
+    readMessage(TESTFILE, message);
+    EXPECT_EQ(message, "7");
+
+    ASSERT_FALSE(readMessage(TESTFILE, message));
+}
+
+
+TEST_F(MessageManagerTest, LongMessages)
+{
+    std::string longMessage = "supermegaultralongtest123456789000000000"; 
+    ASSERT_TRUE(writeMessage(TESTFILE, longMessage));
+
+    std::string read;
+    ASSERT_TRUE(readMessage(TESTFILE, read));
+
+    EXPECT_EQ(read.size(), 20);
+}
+
