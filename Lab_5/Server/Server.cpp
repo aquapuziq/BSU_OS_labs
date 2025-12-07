@@ -12,7 +12,9 @@ static ReadWriteLock* rwLock = nullptr;
 static string fileName;
 
 bool findById(int id, Employee& employee, fstream& file) {
+    file.clear();
     file.seekg(0, ios::beg);
+
     while (file.read((char*)&employee, sizeof(Employee))) {
         if (employee.num == id) return true;
     }
@@ -20,17 +22,23 @@ bool findById(int id, Employee& employee, fstream& file) {
 }
 
 bool writeById(const Employee& employee, fstream& file) {
+    file.clear();
     file.seekg(0, ios::beg);
+
     Employee cur;
     while (file.read((char*)&cur, sizeof(Employee))) {
         if (cur.num == employee.num) {
+            file.clear();
             file.seekp((int)file.tellg() - sizeof(Employee));
-            file.write((char*)&employee, sizeof(Employee));
+            file.write((char*)&employee, sizeof(employee));
+            file.flush();
             return true;
         }
     }
     return false;
 }
+
+
 DWORD WINAPI InstanceThread(LPVOID pipe) {
     HANDLE hPipe = (HANDLE)pipe;
     while (true) {

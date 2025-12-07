@@ -6,11 +6,11 @@ using namespace std;
 
 int main()
 {
+    setlocale(LC_ALL, "ru");
     char c[20];
     char command[20];
     int data;
     Employee employee;
-    emp
     DWORD dw;
     bool b;
 
@@ -61,7 +61,7 @@ int main()
             }
 
             if (b == false) {
-                cout << "Employee not found" << endl;
+                cout << "Сотрудник не найден" << endl;
                 continue;
             }
             else {
@@ -73,8 +73,12 @@ int main()
                 cout << "Клиент получил следующего сотрудника: " << employee.num << " " << employee.name
                     << " " << employee.hours << endl;
             }
-            cout << "Нажмите любую клавишу для чтения...";
+            cout << "Введите что-либо для продолжения: ";
             cin >> c;
+
+            int endMarker = 1;
+            WriteFile(hServer, &endMarker, sizeof(endMarker), &dw, NULL);
+
         }
         else if (strcmp(command, "write") == 0) {
             cout << "Введите ID сотрудника: ";
@@ -106,8 +110,6 @@ int main()
                 cout << "Введите нового сотрудника (ID, имя, часы): ";
                 cin >> employee.num >> employee.name >> employee.hours;
 
-                cout << "Введите что-либо для отправки данных на сервер: ";
-                cin >> c;
 
                 if (!WriteFile(hServer, &employee, sizeof(employee), &dw, NULL)) {
                     cerr << "Ошибка чтения канала";
@@ -116,13 +118,16 @@ int main()
                 }
             }
 
-            cout << "Введите что-либо для записи: ";
+            cout << "Введите что-либо для завершения записи: ";
             cin >> c;
+
+            int endMarker = 1;
+            WriteFile(hServer, &endMarker, sizeof(endMarker), &dw, NULL);
         }
     }
 
     CloseHandle(hServer);
-    cout << "Введите что-либо для завершения работы";
+    cout << "Введите что-либо для завершения работы: ";
     cin >> c;
     return 0;
 }
