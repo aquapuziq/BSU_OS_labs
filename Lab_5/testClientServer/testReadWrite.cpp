@@ -1,7 +1,7 @@
-#define BOOST_TEST_MODULE ReadWriteLockTests
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp> 
 #include "../ClientServerHead/ClientServerHead.h"
 #include <thread>
+#include <mutex>
 #include <vector>
 
 BOOST_AUTO_TEST_CASE(testRWlock)

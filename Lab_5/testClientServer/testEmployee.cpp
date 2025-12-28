@@ -1,8 +1,7 @@
-﻿#define BOOST_TEST_MODULE EmployeeTests
-#include <boost/test/included/unit_test.hpp>
+﻿#include <boost/test/unit_test.hpp> 
 #include "../ClientServerHead/employee.h"
 
-BOOST_AUTO_TEST_CASE(test_find_employee_found) {
+BOOST_AUTO_TEST_CASE(testEmployeeFound) {
     Employee arr[3] = {
         {1, "A", 10.5},
         {2, "B", 11},
@@ -13,7 +12,7 @@ BOOST_AUTO_TEST_CASE(test_find_employee_found) {
     BOOST_CHECK_EQUAL(pos, 1);
 }
 
-BOOST_AUTO_TEST_CASE(test_find_employee_not_found) {
+BOOST_AUTO_TEST_CASE(tesEmployeeNFound) {
     Employee arr[2] = {
         {1, "A", 10},
         {2, "B", 11}
